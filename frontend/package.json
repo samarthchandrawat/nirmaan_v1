@@ -9,17 +9,30 @@
   },
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.2.3",
+    "@shadcn/ui": "^0.0.4",
     "@tanstack/react-query": "^5.55.3",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.475.0",
     "next": "^15.1.4",
+    "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-qr-reader": "^3.0.0-beta-1",
     "viem": "2.21.55",
     "wagmi": "^2.14.9"
   },
   "devDependencies": {
     "@types/node": "^20.14.8",
     "@types/react": "^19.0.6",
-    "typescript": "5.5.2",
-    "dotenv": "^16.0.3"
-  }
+    "autoprefixer": "^10.4.20",
+    "dotenv": "^16.0.3",
+    "postcss": "^8.5.2",
+    "tailwindcss": "^3.4.17",
+    "typescript": "5.5.2"
+  },
+  "description": "This is a simple Ethereum transfer application built for the TreeHacks Web3 Workshop. The project demonstrates how to build a basic decentralized application using modern Web3 tools and frameworks.",
+  "main": "next.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

@@ -5,11 +5,12 @@
 import { viem } from "hardhat";
 
 async function main() {
-  console.log("Deploying SimpleNFT contract...");
   
-  const simpleNFT = await viem.deployContract("SimpleNFT");
+  console.log("Deploying WorkerPayments contract...");
 
-  console.log("SimpleNFT deployed to:", simpleNFT.address);
+  const workerPayments = await viem.deployContract("WorkerPayments");
+
+  console.log("WorkerPayments deployed to:", workerPayments.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
