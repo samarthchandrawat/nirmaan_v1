@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { registerWorker } from "../../utils/api";
+import { verifyWorkerBeforeRegistration} from "../../utils/api";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -8,34 +9,52 @@ export default function RegisterWorker() {
     const [aadhaar, setAadhaar] = useState("");
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
-    const [email, setEmail] = useState("");
     const [dob, setDob] = useState("");
     const [workerId, setWorkerId] = useState("");
+    const [verificationStatus, setVerificationStatus] = useState("");
 
-    const registerWorker = async (aadhaar, name, phone, email, dob) => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({
-                    success: true,
-                    workerId: "WKR123456",
-                });
-            }, 1000); // Simulate a slight delay
-        });
-    };
+    // const registerWorker = async (aadhaar, name, phone, email, dob) => {
+    //     return new Promise((resolve) => {
+    //         setTimeout(() => {
+    //             resolve({
+    //                 success: true,
+    //                 workerId: "WKR123456",
+    //             });
+    //         }, 1000); // Simulate a slight delay
+    //     });
+    // };
     
     const handleRegister = async () => {
+
+        //Check Aadhaar Number Requirements
         if (aadhaar.length !== 12) {
             alert("Invalid Aadhaar number");
             return;
         }
-    
-        // Simulate successful registration
-        alert("Registration successful!");
+
+        //Validation via Government
+        const verification = await verifyWorkerBeforeRegistration(aadhaar, name, phone, dob)
+
+        if (!verification.success) {
+            setVerificationStatus("Does not have government authorization to work");
+            return
+        } else {
+            setVerificationStatus("");
+        }
+
+        //Finally register worker
+        const result = await registerWorker(aadhaar, name, phone);
+        if (result.success) {
+            setVerificationStatus("");
+            setWorkerId(result.workerId);
+        } else {
+            setVerificationStatus("Error: This account has already been registered.");
+        }
         
         // Redirect to worker dashboard after a short delay
-        setTimeout(() => {
-            window.location.href = "/worker-dashboard"; // Change this to match your actual dashboard route
-        }, 1000);
+        // setTimeout(() => {
+        //     window.location.href = "/worker-dashboard"; // Change this to match your actual dashboard route
+        // }, 1000);
     };
     
     return (
@@ -55,19 +74,6 @@ export default function RegisterWorker() {
                             placeholder="Your Name" 
                             value={name} 
                             onChange={(e) => setName(e.target.value)} 
-                            className="w-full border rounded-lg p-2"
-                            required
-                        />
-                    </div>
-
-                    {/* Label & Input for Email */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Email</label>
-                        <Input 
-                            type="email" 
-                            placeholder="you@example.com" 
-                            value={email} 
-                            onChange={(e) => setEmail(e.target.value)} 
                             className="w-full border rounded-lg p-2"
                             required
                         />
@@ -117,6 +123,10 @@ export default function RegisterWorker() {
                         onClick={handleRegister}>
                         Register
                     </Button>
+
+                    {verificationStatus && (
+                    <p className="text-red-600 text-center">{verificationStatus}</p> // Display the error message if verification fails
+                    )}
 
                     {/* Success Message */}
                     {workerId && (
