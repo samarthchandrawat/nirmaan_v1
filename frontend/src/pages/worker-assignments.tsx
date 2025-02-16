@@ -99,7 +99,7 @@ const WorkerAssignments: React.FC = () => {
                 >
                   <td className="p-3 text-center">{assignment.aadhaar}</td>
                   <td className="p-3 text-center">{assignment.expiration_date}</td>
-                  <td className="p-3 text-center">${assignment.payment}</td>
+                  <td className="p-3 text-center">₹{assignment.payment}</td>
                   <td className="p-3 text-center font-semibold">{assignment.status}</td>
                   <td className="p-3 text-center">
                       {assignment.status === "unpaid" && (
