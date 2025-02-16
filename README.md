@@ -15,7 +15,6 @@ Nirmaan integrates Web3 with real-world financial infrastructure:
 ## Conclusion
 Nirmaan aims to create a fair and transparent wage system for construction workers, eliminating financial exploitation and ensuring seamless access to welfare benefits. By integrating Web3 with real-world financial infrastructure, we hope to drive real social impact. Future plans include expanding to other labor sectors and partnering with government agencies.
 
-## Setup
 
 # Setup Instructions  
 
