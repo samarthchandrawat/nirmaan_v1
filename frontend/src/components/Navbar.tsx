@@ -19,9 +19,9 @@ const Navbar: React.FC = () => {
   return (
     <nav className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
       <Link href="/dashboard"> {/* Wrap the h1 in Link */}
-        <a>
+        {/* <a> */}
           <h1 className="text-xl font-bold text-blue-600">Nirmaan</h1>
-        </a>
+        {/* </a> */}
       </Link>
 
       {role && (

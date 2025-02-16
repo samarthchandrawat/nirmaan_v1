@@ -4,7 +4,7 @@ import { Button } from "../components/ui/button";
 import { getWorkerAssignments, raiseDispute } from "../../utils/api";
 
 interface Assignment {
-  assignment_id: number;
+  id: number;
   contractor_id: string;
   aadhaar: number;
   expiration_date: string;
@@ -94,7 +94,7 @@ const WorkerAssignments: React.FC = () => {
             <tbody>
               {assignments.map((assignment) => (
                 <tr
-                  key={assignment.assignment_id}
+                  key={assignment.id}
                   className={`border-b h-12 ${assignment.status !== "unpaid" ? "bg-gray-300 text-gray-500" : "bg-white"}`}
                 >
                   <td className="p-3 text-center">{assignment.aadhaar}</td>
