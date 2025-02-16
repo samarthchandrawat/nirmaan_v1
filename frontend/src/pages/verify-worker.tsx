@@ -33,7 +33,7 @@ const Verify: React.FC = () => {
       setVerificationStatus("Worker verification successful!");
     } else {
       setWorkerData(null);
-      setVerificationStatus("Worker verification failed.");
+      setVerificationStatus("Worker verification failed. Citizen may not be authorized to work!");
     }
   };
 

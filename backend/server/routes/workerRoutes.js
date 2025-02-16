@@ -1,7 +1,8 @@
 const express = require('express');
 const crypto = require('crypto');
+const { ethers } = require('ethers');
 const pool = require('../config/db');
-const blockchainAddress = "0x0000000000000000000000000000000000000000"; // Placeholder
+//const blockchainAddress = "0x0000000000000000000000000000000000000000"; // Placeholder
 
 const router = express.Router();
 
@@ -39,6 +40,11 @@ router.post('/register-worker', async (req, res) => {
     }
 
     const aadhaarHash = crypto.createHash('sha256').update(aadhaar).digest('hex');
+
+    // Generate a new Ethereum wallet
+    const wallet = ethers.Wallet.createRandom();
+    const blockchainAddress = wallet.address;
+    //const privateKey = wallet.privateKey;
 
     const result = await pool.query(
         'INSERT INTO workers (aadhaar_hash, name, phone, blockchain_address) VALUES ($1, $2, $3, $4) RETURNING id',
