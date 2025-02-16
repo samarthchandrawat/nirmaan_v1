@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import WorkerPrompts from './WorkerPrompts';
+import WorkerPrompts from './Prompts';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -36,6 +36,7 @@ export default function ChatBox({ userRole, userId }: ChatBoxProps) {
         },
         body: JSON.stringify({
           message: trimmedInput,
+          userRole: userRole,
           workerId: userRole === 'worker' ? userId : undefined
         }),
       });
@@ -48,11 +49,18 @@ export default function ChatBox({ userRole, userId }: ChatBoxProps) {
           setSuggestedPrompts(data.suggestions);
         }
       } else {
-        setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
+        const errorMessage = data.details || data.error || 'An error occurred. Please try again.';
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: `I apologize, but I encountered an error: ${errorMessage}` 
+        }]);
       }
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'I apologize, but I encountered a network error. Please check your connection and try again.' 
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -94,22 +102,43 @@ export default function ChatBox({ userRole, userId }: ChatBoxProps) {
             {/* Messages Container */}
             <div className="flex-1 p-4 overflow-y-auto">
               {messages.length === 0 && (
-                <WorkerPrompts onPromptClick={handlePromptClick} suggestedPrompts={suggestedPrompts} />
+                <WorkerPrompts 
+                  onPromptClick={handlePromptClick} 
+                  suggestedPrompts={[]}
+                  userRole={userRole}
+                  showInitialPrompts={true}
+                />
               )}
               {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}
-                >
+                <div key={index} className="mb-4">
                   <div
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      message.role === 'user'
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-gray-100 text-gray-900'
-                    }`}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <div
+                      className={`max-w-[80%] rounded-lg p-3 ${
+                        message.role === 'user'
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-gray-100 text-gray-900'
+                      }`}
+                    >
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    </div>
                   </div>
+                  {/* Show suggestions after assistant's message */}
+                  {message.role === 'assistant' && suggestedPrompts.length > 0 && index === messages.length - 1 && (
+                    <div className="mt-4 ml-4">
+                      {suggestedPrompts.map((prompt, promptIndex) => (
+                        <div key={`suggested-${promptIndex}`} className="mb-2">
+                          <button
+                            onClick={() => handlePromptClick(prompt)}
+                            className="w-full text-left p-2 rounded-lg hover:bg-purple-50 transition-colors border border-gray-200 hover:border-purple-200 text-gray-900 text-sm"
+                          >
+                            {prompt}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
               {isLoading && (
@@ -120,34 +149,29 @@ export default function ChatBox({ userRole, userId }: ChatBoxProps) {
                 </div>
               )}
             </div>
-
-            {/* Suggestions after messages */}
-            {messages.length > 0 && suggestedPrompts.length > 0 && (
-              <div className="px-4 py-2 border-t border-gray-200">
-                <WorkerPrompts onPromptClick={handlePromptClick} suggestedPrompts={suggestedPrompts} />
-              </div>
-            )}
             
             {/* Input Form */}
-            <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type your message..."
-                  className="flex-1 p-2 border rounded-lg focus:outline-none focus:border-purple-600 text-gray-900"
-                  disabled={isLoading}
-                />
-                <button
-                  type="submit"
-                  disabled={isLoading || !input.trim()}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
-                >
-                  Send
-                </button>
-              </div>
-            </form>
+            <div className="border-t border-gray-200">
+              <form onSubmit={handleSubmit} className="p-4">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Type your message..."
+                    className="flex-1 p-2 border rounded-lg focus:outline-none focus:border-purple-600 text-gray-900"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="submit"
+                    disabled={isLoading || !input.trim()}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                  >
+                    Send
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       ) : (
