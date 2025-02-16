@@ -2,6 +2,8 @@ const express = require("express");
 const { ethers } = require("ethers");
 const pool = require("../config/db");
 require("dotenv").config();
+const crypto = require('crypto');
+
 
 const router = express.Router();
 
@@ -196,17 +198,21 @@ router.post("/release-payment", async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid worker Ethereum address" });
         }
 
-        // let paymentAmount;
-        // paymentAmount = ethers.parseEther(assignment.payment.toString());
-        // const tx = await contract.releasePayment(workerAddress, assignmentId, {
-        //     value: paymentAmount,
-        // });
+        let paymentAmount;
+        paymentAmount = ethers.parseEther(assignment.payment.toString());
+        const tx = await contract.releasePayment(workerAddress, assignmentId, {
+            value: paymentAmount,
+        });
   
-        // await tx.wait();
+        await tx.wait();
+
+        // const transactionHash = crypto.createHash('sha256')
+        // .update(`${workerId}-${assignmentId}-${Date.now()}`)
+        // .digest('hex');
 
         await pool.query(
             "INSERT INTO payments (worker_id, amount, employer, transaction_hash) VALUES ($1, $2, $3, $4)",
-            [workerId, assignment.payment, contractorId, "On Blockchain"]
+            [workerId, assignment.payment, contractorId, transactionHash]
         );
 
         // Update assignment status to 'paid' in database
