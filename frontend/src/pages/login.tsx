@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import Head from "next/head";
+import { verifyWorker } from "../../utils/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,16 +30,32 @@ export default function LoginPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleGetOtp = () => {
+  const handleGetOtp = async () => {
     if (!formData.aadhar || formData.aadhar.length !== 12) {
       setError("Please enter a valid 12-digit Aadhar number");
       return;
     }
+
+    //Add error checking to ensure number submittted is a correct one. 
+    const verificationResponse = await verifyWorker(formData.aadhar);
+
+    // Check the response and handle the result
+    if (!verificationResponse.success) {
+      setError("Aadhar number not found in the database");
+      return;
+    }
+
+    localStorage.setItem("userName", JSON.stringify({
+      workerId:verificationResponse.workerID,
+      aadhaar: formData.aadhar,
+      name: verificationResponse.name
+      }));
+
     setIsOtpSent(true);
     setError("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (role === "worker") {
@@ -51,11 +68,40 @@ export default function LoginPage() {
         setError("Enter a valid 4-digit OTP");
         return;
       }
+
+      //Add error checking to ensure number submittted is a correct one. 
+    const verificationResponse = await verifyWorker(formData.aadhar);
+
+    // Check the response and handle the result
+    if (!verificationResponse.success) {
+      setError("Aadhar number not found in the database");
+      return;
+    }
+
+    localStorage.setItem("userName", JSON.stringify({
+      workerId:verificationResponse.workerID,
+      aadhaar: formData.aadhar,
+      name: verificationResponse.name
+      }));
+
+
     } else {
       if (!formData.email || !formData.password) {
         setError("Email and password are required");
         return;
       }
+
+      //Dummy Contract Information 
+      if ((formData.email != "contractor@gmail.com") || (formData.password != "password"))  {
+        setError("Email/Password not correct!");
+        return;
+      }
+
+      localStorage.setItem("userName", JSON.stringify({
+        workerId:999,
+        aadhaar: 999999999999,
+        name: "Contractor Kumar"
+        }));
     }
 
     if (role === "worker" && formData.otp.match(/^\d{4}$/)) {

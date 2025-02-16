@@ -49,12 +49,19 @@ export default function RegisterWorker() {
             setWorkerId(result.workerId);
         } else {
             setVerificationStatus("Error: This account has already been registered.");
+            return;
         }
+
+        localStorage.setItem("userName", JSON.stringify({
+            workerId: result.workerId,
+            aadhaar: aadhaar,
+            name: name
+        }));
         
         // Redirect to worker dashboard after a short delay
-        // setTimeout(() => {
-        //     window.location.href = "/worker-dashboard"; // Change this to match your actual dashboard route
-        // }, 1000);
+        setTimeout(() => {
+            window.location.href = "/login?role=worker"; // Change this to match your actual dashboard route
+        }, 1000);
     };
     
     return (
