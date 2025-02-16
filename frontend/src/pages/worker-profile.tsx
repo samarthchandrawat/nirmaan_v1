@@ -1,22 +1,22 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 
-const WorkerProfile: React.FC = () => {
+const WorkerProfile = () => {
   const [workerData, setWorkerData] = useState({
-    name: "Rahul Sharma",
-    email: "rahul.sharma@example.com",
-    aadhaar: "1234-5678-9012",
+    name: 'User',
+    aadhaar: 'aadhaar',
   });
 
   useEffect(() => {
-    fetchWorkerProfile();
+    const storedUserName = localStorage.getItem('userName');
+    if (storedUserName) {
+      const parsedData = JSON.parse(storedUserName);
+      setWorkerData({
+        name: parsedData.name || 'User',
+        aadhaar: parsedData.aadhaar || 'aadhaar',
+      });
+    }
   }, []);
-
-  const fetchWorkerProfile = async () => {
-    // Placeholder function for future API call
-    // Example: const response = await fetch("/api/worker-profile");
-    // setWorkerData(await response.json());
-  };
 
   return (
     <div className="h-screen bg-gradient-to-br from-blue-500 to-purple-600 text-white flex flex-col">
@@ -29,11 +29,6 @@ const WorkerProfile: React.FC = () => {
             <div className="bg-gray-100 p-4 w-full rounded-lg">
               <p className="text-gray-700 text-lg">
                 <strong className="text-gray-900">Name:</strong> {workerData.name}
-              </p>
-            </div>
-            <div className="bg-gray-100 p-4 w-full rounded-lg">
-              <p className="text-gray-700 text-lg">
-                <strong className="text-gray-900">Email:</strong> {workerData.email}
               </p>
             </div>
             <div className="bg-gray-100 p-4 w-full rounded-lg">

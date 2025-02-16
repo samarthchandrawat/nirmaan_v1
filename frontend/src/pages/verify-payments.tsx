@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getPayments } from "../../utils/api";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
@@ -6,16 +6,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import Navbar from "../components/Navbar"; // Assuming Navbar is still needed
 
 export default function VerifyPayments() {
-    const [aadhaar, setAadhaar] = useState("");
+    const [workerData, setWorkerData] = useState({
+        name: 'User',
+        aadhaar: 'aadhaar',
+      });
     const [payments, setPayments] = useState<any[]>([]);
 
-    const fetchPayments = async () => {
-        if (aadhaar.length !== 12) {
-            alert("Invalid Aadhaar number");
-            return;
+
+    useEffect(() => {
+        const storedUserName = localStorage.getItem('userName');
+        if (storedUserName) {
+          const parsedData = JSON.parse(storedUserName);
+          setWorkerData({
+            name: parsedData.name || 'User',
+            aadhaar: parsedData.aadhaar || 'aadhaar',
+          });
         }
-        const result = await getPayments(aadhaar);
+      }, []);
+
+    const fetchPayments = async () => {
+        const result = await getPayments(workerData.aadhaar);
         setPayments(result.payments || []);
+        if (result.payments.length == 0) {
+            alert("You have no payments to show!");
+        }
     };
 
     return (
@@ -24,21 +38,9 @@ export default function VerifyPayments() {
 
             <div className="flex items-center justify-center flex-grow">
                 <div className="bg-white p-8 rounded-2xl shadow-2xl w-96 text-center border-t-4 border-teal-500">
-                    <h2 className="text-3xl font-bold text-gray-800 mb-6">Verify Payments</h2>
+                    <h2 className="text-3xl font-bold text-gray-800 mb-6">Payments to You</h2>
                     <div className="space-y-4">
                         {/* Aadhaar Input */}
-                        <Input
-                            type="text"
-                            placeholder="Enter Aadhaar Number"
-                            value={aadhaar}
-                            onChange={(e) => {
-                                // Ensure only numeric input and limit to 12 digits
-                                const value = e.target.value.replace(/\D/g, '').slice(0, 12);
-                                setAadhaar(value);
-                            }}
-                            maxLength={12} // Ensure no more than 12 digits
-                            className="p-3 w-full border rounded-lg text-lg text-black"
-                        />
                         <Button
                             className="w-full bg-teal-500 text-white py-3 rounded-lg font-semibold hover:bg-teal-600"
                             onClick={fetchPayments}
