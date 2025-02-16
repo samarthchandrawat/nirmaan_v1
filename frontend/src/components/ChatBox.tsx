@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import WorkerPrompts from './Prompts';
+import MediationRequest from './MediationRequest';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -17,6 +18,40 @@ export default function ChatBox({ userRole, userId }: ChatBoxProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isMinimized, setIsMinimized] = useState(true);
   const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>([]);
+  const [showMediationRequest, setShowMediationRequest] = useState(false);
+  const [currentDispute, setCurrentDispute] = useState<{
+    workerId: string;
+    contractorId: string;
+    description: string;
+    amount?: number;
+  } | null>(null);
+
+  const checkForMediationRequest = (message: string) => {
+    const mediationKeywords = [
+      'schedule mediation',
+      'request mediation',
+      'need mediation',
+      'want mediation',
+      'arrange mediation',
+      'schedule a call',
+      'mediation session',
+      'mediation call',
+      'schedule meeting',
+      'arrange meeting',
+      'schedule consultation',
+      'dispute',
+      'mediation',
+      'resolve',
+      'conflict',
+      'payment issue',
+    ];
+
+    // Convert message to lowercase for case-insensitive matching
+    const lowerMessage = message.toLowerCase();
+    
+    // Check if the message contains any mediation-related keywords
+    return mediationKeywords.some(keyword => lowerMessage.includes(keyword));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +80,21 @@ export default function ChatBox({ userRole, userId }: ChatBoxProps) {
       
       if (response.ok) {
         setMessages(prev => [...prev, { role: 'assistant', content: data.answer }]);
+        
+        if (checkForMediationRequest(input)) {
+          // Extract amount if mentioned (e.g., "₹5000" or "5000")
+          const amountMatch = input.match(/₹?(\d+)/);
+          const amount = amountMatch ? parseInt(amountMatch[1]) : undefined;
+
+          setCurrentDispute({
+            workerId: userId || 'unknown',
+            contractorId: 'pending', // This would come from your actual data
+            description: input,
+            amount
+          });
+          setShowMediationRequest(true);
+        }
+
         if (data.suggestions && data.suggestions.length > 0) {
           setSuggestedPrompts(data.suggestions);
         }
@@ -71,8 +121,24 @@ export default function ChatBox({ userRole, userId }: ChatBoxProps) {
     setIsMinimized(false);
   };
 
+  const handleMediationSuccess = (meetingDetails: any) => {
+    setShowMediationRequest(false);
+    setMessages(prev => [...prev, {
+      role: 'assistant',
+      content: `✅ Mediation session scheduled!\n\nMeeting Details:\nDate: ${new Date(meetingDetails.meeting.meeting.start_time).toLocaleString()}\nJoin Link: ${meetingDetails.meeting.participants.worker.join_url}\n\nA mediator will help resolve your dispute. You'll receive a notification with these details as well.`
+    }]);
+  };
+
   return (
     <div className="fixed bottom-4 right-4 z-50">
+      {showMediationRequest && currentDispute && (
+        <MediationRequest
+          disputeDetails={currentDispute}
+          onClose={() => setShowMediationRequest(false)}
+          onSuccess={handleMediationSuccess}
+        />
+      )}
+      
       {!isMinimized ? (
         <div className="bg-white rounded-lg shadow-xl w-96 overflow-hidden border border-gray-200">
           <div className="bg-purple-600 p-4 text-white flex justify-between items-center">
@@ -121,7 +187,67 @@ export default function ChatBox({ userRole, userId }: ChatBoxProps) {
                           : 'bg-gray-100 text-gray-900'
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      {message.role === 'assistant' && message.content.includes('Auto-generated Dispute Report:') ? (
+                        // Render dispute report with formatting
+                        <div className="space-y-2">
+                          {message.content.split('\n\n').map((section, sIdx) => {
+                            if (section.startsWith('Auto-generated Dispute Report:')) {
+                              return (
+                                <div key={sIdx} className="border-t border-gray-300 pt-2 mt-2">
+                                  <h4 className="font-semibold text-purple-700 mb-2">Dispute Report</h4>
+                                  <div className="text-sm whitespace-pre-wrap">
+                                    {section.replace('Auto-generated Dispute Report:', '').trim()}
+                                  </div>
+                                </div>
+                              );
+                            } else if (section.startsWith('Legal Citations:')) {
+                              return (
+                                <div key={sIdx} className="border-t border-gray-300 pt-2">
+                                  <h4 className="font-semibold text-purple-700 mb-2">Legal Citations</h4>
+                                  <div className="text-sm space-y-2">
+                                    {section.replace('Legal Citations:', '').trim().split('\n').map((citation, cIdx) => {
+                                      if (citation.startsWith('Source:')) {
+                                        return (
+                                          <a
+                                            key={cIdx}
+                                            href={citation.replace('Source:', '').trim()}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 hover:underline block"
+                                          >
+                                            View Source
+                                          </a>
+                                        );
+                                      }
+                                      return (
+                                        <p key={cIdx} className="text-gray-600">
+                                          {citation}
+                                        </p>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            } else if (section.startsWith('Relevant Legal Information:')) {
+                              return (
+                                <div key={sIdx} className="border-t border-gray-300 pt-2">
+                                  <h4 className="font-semibold text-purple-700 mb-2">Legal Information</h4>
+                                  <div className="text-sm whitespace-pre-wrap">
+                                    {section.replace('Relevant Legal Information:', '').trim()}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return (
+                              <p key={sIdx} className="text-sm whitespace-pre-wrap">
+                                {section}
+                              </p>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      )}
                     </div>
                   </div>
                   {/* Show suggestions after assistant's message */}
