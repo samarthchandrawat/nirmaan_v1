@@ -47,6 +47,16 @@ const Navbar: React.FC = () => {
                 </a>
               </li>
               <li>
+                <a href="/assign-work" className="text-gray-700 hover:text-blue-600 font-medium">
+                  Assign Work
+                </a>
+              </li>
+              <li>
+                <a href="/assigned-work" className="text-gray-700 hover:text-blue-600 font-medium">
+                  Assigned Work
+                </a>
+              </li>
+              <li>
                 <a href="/pay-worker" className="text-gray-700 hover:text-blue-600 font-medium">
                   Pay Worker
                 </a>
