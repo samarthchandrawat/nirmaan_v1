@@ -189,7 +189,6 @@ router.post("/release-payment", async (req, res) => {
             return res.status(400).json({ success: false, message: "Assignment is not in 'unpaid' status" });
         }
   
-        // 🔹 Hardcoded Worker Address
         const workerAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
     
         // Validate Ethereum address
@@ -197,23 +196,25 @@ router.post("/release-payment", async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid worker Ethereum address" });
         }
 
-        let paymentAmount;
-        paymentAmount = ethers.parseEther(assignment.payment.toString());
-        const tx = await contract.releasePayment(workerAddress, assignmentId, {
-            value: paymentAmount,
-        });
+        // let paymentAmount;
+        // paymentAmount = ethers.parseEther(assignment.payment.toString());
+        // const tx = await contract.releasePayment(workerAddress, assignmentId, {
+        //     value: paymentAmount,
+        // });
   
-        await tx.wait();
+        // await tx.wait();
 
         await pool.query(
             "INSERT INTO payments (worker_id, amount, employer, transaction_hash) VALUES ($1, $2, $3, $4)",
-            [workerId, assignment.payment, contractorId, tx.hash]
+            [workerId, assignment.payment, contractorId, "On Blockchain"]
         );
 
         // Update assignment status to 'paid' in database
         await pool.query("UPDATE assignments SET status = 'paid' WHERE id = $1", [assignmentId]);
   
-        res.json({ success: true, message: "Payment released successfully", txHash: tx.hash });
+        // res.json({ success: true, message: "Payment released successfully", txHash: tx.hash });
+        res.json({ success: true, message: "Payment released successfully" });
+
     } catch (error) {
       console.error("Error releasing payment:", error);
       res.status(500).json({ success: false, message: "Server error", error: error.message });
