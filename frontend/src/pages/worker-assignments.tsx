@@ -17,7 +17,6 @@ const WorkerAssignments: React.FC = () => {
     const [workerData, setWorkerData] = useState({
         name: 'User',
         aadhaar: 'aadhaar',
-        role: 'worker'
       });
 
       useEffect(() => {
@@ -27,20 +26,21 @@ const WorkerAssignments: React.FC = () => {
           setWorkerData({
             name: parsedData.name || 'User',
             aadhaar: parsedData.aadhaar || 'aadhaar',
-            role: 'worker'
           });
+          workerData.aadhaar = parsedData.aadhaar;
         }
       }, []);
-     
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const workerAadhaar = workerData.aadhaar; // Replace with dynamic worker Aadhaar
+
+  let [assignments, setAssignments] = useState<Assignment[]>([]);
+  const workerAadhaar = workerData.aadhaar; 
 
   // Function to fetch assigned work for the worker
-  const fetchWorkerAssignments = async () => {
+  const fetchWorkerAssignments = async (aadhaar_number: string) => {
     try {
-      const response = await getWorkerAssignments(workerAadhaar);
+      const response = await getWorkerAssignments(aadhaar_number);
       if (response.success) {
-        setAssignments(response.data);
+        setAssignments(response.works);
+        assignments = response.works;
       } else {
         console.error("Error fetching worker assignments:", response.message);
       }
@@ -50,7 +50,8 @@ const WorkerAssignments: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchWorkerAssignments();
+    console.log("Worker Aadhaar:", workerData.aadhaar);
+    fetchWorkerAssignments(workerData.aadhaar);
   }, []);
 
   // Dummy dispute handler
