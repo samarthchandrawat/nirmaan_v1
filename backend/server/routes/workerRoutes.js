@@ -1,9 +1,34 @@
 const express = require('express');
 const crypto = require('crypto');
+const { ethers } = require('ethers');
 const pool = require('../config/db');
-const blockchainAddress = "0x0000000000000000000000000000000000000000"; // Placeholder
+//const blockchainAddress = "0x0000000000000000000000000000000000000000"; // Placeholder
 
 const router = express.Router();
+
+//Government verification of an individual before reigstration
+router.post("/verify-worker-before-registration", async (req, res) => {
+  const { aadhaar, name, phone, dob } = req.body;
+
+  try {
+      // Query to check if the Aadhaar, Name, Phone, and DOB match a record
+      const result = await pool.query(
+          `SELECT * FROM citizens WHERE aadhar_number = $1 AND full_name = $2 AND phone_number = $3 AND date_of_birth = $4`,
+          [aadhaar, name, phone, dob]
+      );
+
+      // If a matching record is found, return success
+      if (result.rows.length > 0) {
+          res.json({ success: true, message: "Worker details match an existing record." });
+      } else {
+          // If no match is found, return an error
+          res.json({ success: false, message: "Worker details do not match any existing record." });
+      }
+  } catch (error) {
+      // Handle any errors that may occur during the query
+      res.json({ success: false, message: error.message });
+  }
+});
 
 // 🔹 Worker Registration API
 router.post('/register-worker', async (req, res) => {
@@ -16,6 +41,11 @@ router.post('/register-worker', async (req, res) => {
 
     const aadhaarHash = crypto.createHash('sha256').update(aadhaar).digest('hex');
 
+    // Generate a new Ethereum wallet
+    const wallet = ethers.Wallet.createRandom();
+    const blockchainAddress = wallet.address;
+    //const privateKey = wallet.privateKey;
+
     const result = await pool.query(
         'INSERT INTO workers (aadhaar_hash, name, phone, blockchain_address) VALUES ($1, $2, $3, $4) RETURNING id',
         [aadhaarHash, name, phone, blockchainAddress]
@@ -24,7 +54,7 @@ router.post('/register-worker', async (req, res) => {
     res.json({ success: true, workerId: result.rows[0].id });
   } catch (error) {
     console.error('Error registering worker:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error, most likely caused by duplicate values' });
   }
 });
 

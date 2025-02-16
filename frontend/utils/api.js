@@ -14,6 +14,15 @@ export const verifyWorker = async (aadhaar) => {
     return response.json();
 };
 
+export const verifyWorkerBeforeRegistration = async (aadhaar, name, phone, dob) => {
+    const response = await fetch(`${API_BASE_URL}/verify-worker-before-registration`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ aadhaar, name, phone, dob }),
+    });
+    return response.json();
+};
+
 export const assignWork = async (aadhaar, employer, workDays, dailyWage) => {
     const response = await fetch(`${API_BASE_URL}/assign-work`, {
         method: "POST",
