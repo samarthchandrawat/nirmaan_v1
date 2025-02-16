@@ -17,7 +17,8 @@ export default function PayWorker() {
         const result = await processPayment(aadhaar, amount);
         if (result.success) {
             alert("✅ Payment Successful! TxHash: " + result.txHash);
-            fetchPayments();
+            //fetchPayments();
+            window.location.reload();
         } else {
             alert(result.message);
         }

@@ -19,7 +19,7 @@ export default function VerifyPayments() {
     };
 
     return (
-        <div className="h-screen bg-gradient-to-br from-green-500 to-teal-600 text-white flex flex-col">
+        <div className="min-h-screen w-screen bg-gradient-to-br from-green-500 to-teal-600 text-white flex flex-col">
             <Navbar /> {/* Assuming Navbar is still used */}
 
             <div className="flex items-center justify-center flex-grow">
@@ -52,7 +52,7 @@ export default function VerifyPayments() {
                                 <h3 className="text-lg font-semibold text-secondary">Payment History</h3>
                                 <ul className="mt-2 space-y-2">
                                     {payments.map((p, index) => (
-                                        <li key={index} className="p-3 bg-white shadow-md rounded-md">
+                                        <li key={index} className="p-3 bg-white shadow-md rounded-md break-words overflow-auto">
                                             <p className="text-primary font-semibold">₹{p.amount}</p>
                                             <p className="text-sm text-gray-600">Employer: {p.employer}</p>
                                             <p className="text-xs text-gray-500">Txn: {p.transaction_hash}</p>
