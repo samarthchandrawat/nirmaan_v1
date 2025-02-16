@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { Button } from "../components/ui/button";
-import { getWorkerAssignments } from "../../utils/api";
+import { getWorkerAssignments, raiseDispute } from "../../utils/api";
 
 interface Assignment {
   assignment_id: number;
@@ -54,12 +54,24 @@ const WorkerAssignments: React.FC = () => {
     fetchWorkerAssignments(workerData.aadhaar);
   }, []);
 
-  // Dummy dispute handler
-  const handleRaiseDispute = (id: number) => {
-    console.log(`Raising dispute for assignment ID: ${id}`);
-    setAssignments(assignments.map(assignment =>
-      assignment.assignment_id === id ? { ...assignment, status: "dispute" } : assignment
-    ));
+  // Raise dispute for an assignment
+  const handleRaiseDispute = async (id: number) => {
+    console.log(`Attempting to raise dispute for assignment ID: ${id}`);
+    try {
+      const response = await raiseDispute(id);
+      if (response.success) {
+        console.log(`Dispute raised successfully for assignment ID: ${id}`);
+        setAssignments((prevAssignments) =>
+          prevAssignments.map((assignment) =>
+            assignment.id === id ? { ...assignment, status: "dispute" } : assignment
+          )
+        );
+      } else {
+        console.error(`Failed to raise dispute: ${response.message}`);
+      }
+    } catch (error) {
+      console.error("Error raising dispute:", error);
+    }
   };
 
   return (
@@ -90,15 +102,16 @@ const WorkerAssignments: React.FC = () => {
                   <td className="p-3 text-center">${assignment.payment}</td>
                   <td className="p-3 text-center font-semibold">{assignment.status}</td>
                   <td className="p-3 text-center">
-                    {assignment.status === "unpaid" && (
-                      <Button
-                        className="bg-red-500 text-white px-4 py-2 rounded text-sm font-medium inline-block hover:bg-red-600"
-                        onClick={() => handleRaiseDispute(assignment.assignment_id)}
-                      >
-                        Raise Dispute
-                      </Button>
-                    )}
-                  </td>
+                      {assignment.status === "unpaid" && (
+                        <Button
+                          className="bg-red-500 text-white px-4 py-2 rounded text-sm font-medium inline-block hover:bg-red-600 disabled:opacity-50"
+                          onClick={() => handleRaiseDispute(assignment.id)}
+                          disabled={assignment.status === "dispute"}
+                        >
+                          {assignment.status === "dispute" ? "Dispute Raised" : "Raise Dispute"}
+                        </Button>
+                      )}
+                    </td>
                 </tr>
               ))}
             </tbody>
