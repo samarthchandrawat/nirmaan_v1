@@ -53,6 +53,14 @@ export const getAssignedWork = async (contractorId) => {
     return response.json();
 };
 
+
+// Fetch assigned work for a workers
+export const getWorkerAssignments = async (aadhaar) => {
+    const response = await fetch(`${API_BASE_URL}/assignments/${aadhaar}`);
+    return response.json();
+};
+
+
 // Raise dispute for an assignment
 export const raiseDispute = async (assignmentId) => {
     const response = await fetch(`${API_BASE_URL}/raise-dispute`, {
