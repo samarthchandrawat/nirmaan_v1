@@ -33,6 +33,11 @@ const Navbar: React.FC = () => {
                   Verify Payments
                 </a>
               </li>
+              <li>
+                <a href="/worker-assignments" className="text-gray-700 hover:text-blue-600 font-medium">
+                  Worker Assignments
+                </a>
+              </li>
             </>
           ) : role === "contractor" ? (
             <>

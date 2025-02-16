@@ -2,6 +2,7 @@ import { useState } from "react";
 import Navbar from "../components/Navbar";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
+import { assignWork } from "../../utils/api.js";
 
 const AssignWork: React.FC = () => {
   const [aadhaar, setAadhaar] = useState<string>("");
@@ -12,18 +13,15 @@ const AssignWork: React.FC = () => {
   // Dummy function simulating saving to PostgreSQL
   const saveAssignment = async (aadhaar: string, days: number, payment: number) => {
     const assignment = {
-      assignment_id: Math.floor(Math.random() * 100000), // Random ID for now
-      contractor_id: "C12345", // Replace with actual contractor ID
+      contractorId: "15",
       aadhaar,
-      expiration_date: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // Calculate expiration date
       payment,
-      status: "unpaid",
+      days
     };
 
-    console.log("Saving to PostgreSQL (dummy function):", assignment);
-    
     // Simulating an API call delay
-    return new Promise((resolve) => setTimeout(() => resolve({ success: true }), 1000));
+    const resp = await assignWork(assignment);
+    return resp;
   };
 
   const handleAssignWork = async () => {
@@ -40,8 +38,17 @@ const AssignWork: React.FC = () => {
       return;
     }
 
-    const result = await saveAssignment(aadhaar, Number(days), Number(payment));
-
+    const contractorId = "12";
+  
+    const assignment = {
+      contractorId,
+      aadhaar,
+      payment: Number(payment),
+      days: Number(days)
+    };
+  
+    const result = await assignWork(assignment);
+  
     if (result.success) {
       setMessage("Work assigned successfully!");
       setAadhaar("");
