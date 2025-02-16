@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { queryLaborLaw, generateDisputeReport } from '@/utils/perplexityApi';
 
 // Initialize OpenAI
 const openai = new OpenAI({
@@ -71,10 +72,37 @@ async function getContractorData() {
 async function generateResponse(message: string, userRole: string, workerId?: string) {
   try {
     let systemPrompt = '';
+    let legalContext = '';
+    
+    // Check if the message is related to legal matters or disputes
+    const legalKeywords = [
+      'rights', 'law', 'legal', 'dispute', 'payment', 'wages', 'benefits',
+      'complaint', 'violation', 'safety', 'harassment', 'injury', 'compensation'
+    ];
+    
+    const isLegalQuery = legalKeywords.some(keyword => 
+      message.toLowerCase().includes(keyword)
+    );
+
+    if (isLegalQuery) {
+      try {
+        const legalResponse = await queryLaborLaw(message);
+        legalContext = `\nRelevant Legal Information:
+        ${legalResponse.answer}
+        
+        ${legalResponse.citations && legalResponse.citations.length > 0 ? `Citations:
+        ${legalResponse.citations.map(citation => 
+          `Source: ${citation.url}\n${citation.text}`
+        ).join('\n')}` : ''}`;
+      } catch (error) {
+        console.error('Error fetching legal information:', error);
+        // Continue without legal context if there's an error
+      }
+    }
     
     if (userRole === 'worker') {
       const workerData = await getWorkerData(workerId || 'default');
-      systemPrompt = `You are a financial assistant for construction workers. Use this worker data:
+      systemPrompt = `You are a financial and legal assistant for construction workers. Use this worker data:
          Weekly Earnings: ₹${workerData.weeklyEarnings}
          Verified Days: ${workerData.verifiedDays}
          Pending Days: ${workerData.pendingDays}
@@ -88,6 +116,7 @@ async function generateResponse(message: string, userRole: string, workerId?: st
          Total Paid: ₹${workerData.monthlyStats.totalPaid}
          Pending: ₹${workerData.monthlyStats.pending}
          Average Daily: ₹${workerData.monthlyStats.averageDailyWage}
+         ${legalContext}
 
          Follow these rules strictly:
          1. Always start responses with key financial figures
@@ -97,10 +126,12 @@ async function generateResponse(message: string, userRole: string, workerId?: st
          5. Focus only on numbers and dates
          6. Do not use bullet points or dashes
          7. Each piece of information should be on its own line
-         8. Avoid explanatory text unless absolutely necessary`;
+         8. If legal information is available, include it after financial data
+         9. For legal matters, cite specific laws and regulations
+         10. Avoid explanatory text unless absolutely necessary`;
     } else {
       const contractorData = await getContractorData();
-      systemPrompt = `You are a financial manager for construction contractors. Use this data:
+      systemPrompt = `You are a financial and legal manager for construction contractors. Use this data:
          Total Workers: ${contractorData.workersCount}
          
          Regular Pending Payments: ${contractorData.pendingPayments.count - contractorData.pendingPayments.urgentCount} workers (₹${contractorData.pendingPayments.totalAmount - contractorData.pendingPayments.urgentAmount})
@@ -114,6 +145,7 @@ async function generateResponse(message: string, userRole: string, workerId?: st
          Completion Rate: ${contractorData.performance.completionRate}%
          Attendance Rate: ${contractorData.performance.attendanceRate}%
          Efficiency Score: ${contractorData.performance.efficiencyScore}%
+         ${legalContext}
 
          Follow these rules strictly:
          1. Always start with key financial metrics
@@ -123,8 +155,38 @@ async function generateResponse(message: string, userRole: string, workerId?: st
          5. Focus on numbers, amounts, and dates
          6. Do not use bullet points or dashes
          7. Each piece of information should be on its own line
-         8. Prioritize urgent financial matters
-         9. Avoid explanatory text unless absolutely necessary`;
+         8. If legal information is available, include it after financial data
+         9. For legal matters, cite specific laws and regulations
+         10. Prioritize urgent financial matters
+         11. Avoid explanatory text unless absolutely necessary`;
+    }
+
+    // Check if this is a dispute that needs a report
+    const isDisputeQuery = message.toLowerCase().includes('dispute') || 
+                          message.toLowerCase().includes('complaint');
+
+    let disputeReport = '';
+    if (isDisputeQuery) {
+      try {
+        const report = await generateDisputeReport({
+          workerId: workerId || 'default',
+          contractorId: 'current',
+          issueType: 'payment_dispute',
+          description: message,
+          dateReported: new Date().toISOString()
+        });
+        
+        disputeReport = `\n\nAuto-generated Dispute Report:
+        ${report.answer}
+        
+        ${report.citations && report.citations.length > 0 ? `Legal Citations:
+        ${report.citations.map(citation => 
+          `${citation.text}\nSource: ${citation.url}`
+        ).join('\n')}` : ''}`;
+      } catch (error) {
+        console.error('Error generating dispute report:', error);
+        // Continue without dispute report if there's an error
+      }
     }
 
     const completion = await openai.chat.completions.create({
@@ -137,8 +199,13 @@ async function generateResponse(message: string, userRole: string, workerId?: st
       max_tokens: 500
     });
 
-    const answer = completion.choices[0]?.message?.content || "I apologize, but I couldn't generate a response.";
+    let answer = completion.choices[0]?.message?.content || "I apologize, but I couldn't generate a response.";
     
+    // Append dispute report if available
+    if (disputeReport) {
+      answer += disputeReport;
+    }
+
     // Generate follow-up suggestions focused on financial aspects
     const suggestionsCompletion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
