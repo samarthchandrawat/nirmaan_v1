@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { Button } from "../components/ui/button";
+import { processPayment } from "../../utils/api";
 
 interface Assignment {
   assignment_id: number;
   contractor_id: string;
-  aadhaar: string;
+  aadhaar: number;
   expiration_date: string;
   payment: number;
   status: "paid" | "unpaid" | "dispute";
@@ -18,9 +19,9 @@ const AssignedWork: React.FC = () => {
   const fetchAssignedWork = async () => {
     // Simulated data
     const dummyData: Assignment[] = [
-      { assignment_id: 1, contractor_id: "C123", aadhaar: "123456789012", expiration_date: "2025-03-01", payment: 500, status: "unpaid" },
-      { assignment_id: 2, contractor_id: "C124", aadhaar: "987654321012", expiration_date: "2025-03-05", payment: 700, status: "paid" },
-      { assignment_id: 3, contractor_id: "C125", aadhaar: "456789123012", expiration_date: "2025-03-10", payment: 600, status: "dispute" },
+      { assignment_id: 1, contractor_id: "C123", aadhaar: 123456789012, expiration_date: "2025-03-01", payment: 500, status: "unpaid" },
+      { assignment_id: 2, contractor_id: "C124", aadhaar: 987654321012, expiration_date: "2025-03-05", payment: 700, status: "paid" },
+      { assignment_id: 3, contractor_id: "C125", aadhaar: 456789123012, expiration_date: "2025-03-10", payment: 600, status: "dispute" },
     ];
 
     // Simulate API delay
@@ -39,11 +40,18 @@ const AssignedWork: React.FC = () => {
     ));
   };
 
-  const handleReleasePayment = (id: number) => {
+  const handleReleasePayment = async (id: number, aadhaar: number, amount: number) => {
     console.log(`Releasing payment for assignment ID: ${id}`);
-    setAssignments(assignments.map(assignment =>
-      assignment.assignment_id === id ? { ...assignment, status: "paid" } : assignment
-    ));
+    // setAssignments(assignments.map(assignment =>
+    //   assignment.assignment_id === id ? { ...assignment, status: "paid" } : assignment
+    // ));
+     const result = await processPayment(aadhaar, amount);
+            if (result.success) {
+                alert("✅ Payment Successful! TxHash: " + result.txHash);
+                // fetchPayments();
+            } else {
+                alert(result.message);
+            }
   };
 
   return (
@@ -84,7 +92,7 @@ const AssignedWork: React.FC = () => {
                     </Button>
                     <Button
                         className="bg-green-500 text-white px-4 py-2 rounded text-sm font-medium inline-block hover:bg-green-600"
-                        onClick={() => handleReleasePayment(assignment.assignment_id)}
+                        onClick={() => handleReleasePayment(assignment.assignment_id, assignment.aadhaar, assignment.payment)}
                     >
                         Release Payment
                     </Button>
