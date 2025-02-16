@@ -1,21 +1,22 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import Navbar from "../components/Navbar";
+import {verifyWorker} from "../../utils/api.js";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 
-const VerifyWorker: React.FC = () => {
+const Verify: React.FC = () => {
   const [aadhaar, setAadhaar] = useState<string>("");
   const [workerData, setWorkerData] = useState<any>(null);
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const router = useRouter();
 
-  // Actual worker verification function
-  const verifyWorker = async (aadhaar: string) => {
-    // Replace with actual API call
-    const response = await fetch(`/api/verifyWorker?aadhaar=${aadhaar}`);
-    return response.json();
-  };
+  // // Actual worker verification function
+  // const verifyWorker = async (aadhaar: string) => {
+  //   // Replace with actual API call
+  //   const response = await fetch(`/api/verifyWorker?aadhaar=${aadhaar}`);
+  //   return response.json();
+  // };
 
   const handleVerify = async () => {
     // Validate if the Aadhaar number is exactly 12 digits long
@@ -81,4 +82,4 @@ const VerifyWorker: React.FC = () => {
   );
 };
 
-export default VerifyWorker;
+export default Verify;
